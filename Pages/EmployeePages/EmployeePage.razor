@@ -1,0 +1,186 @@
+@page "/employees/{id:int}"
+@inject IEmployeeRequests EmployeeRequests
+@inject IDocumentRequests DocumentRequests
+@inject IServiceRequests ServiceRequests
+@inject ISiteRequests SiteRequests
+@inject NavigationManager NavigationManager
+
+
+@if (employee == null)
+{
+    <PageTitle>GuacaFactory - Employee</PageTitle>
+
+    <LoadingSpinner/>
+}
+else
+{
+    <PageTitle>GuacaFactory - @employee.Firstname @employee.Lastname</PageTitle>
+
+    <div class="row justify-content-evenly mb-5">
+        <div class="col-8">
+            <h1>@employee.Firstname @employee.Lastname</h1>
+            
+            <p style="font-size: 1.5rem">
+                <span style="font-weight: bold">Status: </span>
+                @if (service != null)
+                {
+                    <span style="color: green">Active</span>
+                    <br/>
+                    <span style="font-weight: bold">Job: </span>
+                    <span>@service.Name</span>
+                    <br/>
+                    <span style="font-weight: bold">Site: </span>
+                    <span>@(site?.Name ?? "N/A")</span>
+                }
+                else
+                {
+                    <span style="color: red">Inactive</span>
+                    <br/>
+                    <span style="font-weight: bold">Last known site: </span>
+                    <span>@(site?.Name ?? "N/A")</span>
+                }
+            </p>
+        </div>
+        <div class="col-4">
+            @if (employee.PictureUrl != null)
+            {
+                <img src="@DocumentRequests.GetDocumentViaUrl(employee.PictureUrl)" style="height: auto; width: 100%; overflow: hidden;" alt="Employee picture" class="img-thumbnail"/>
+            }
+            else
+            {
+                <img src="image/account-25.png" style="height: auto; width: 100%; aspect-ratio: 1/1" alt="Employee picture" class="img-thumbnail"/>
+            }
+        </div>
+    </div>
+    
+    <div class="row justify-content-evenly mb-3">
+        <div class="col-6">
+            <h2 class="mb-2">Personal information</h2>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Firstname:</b> @employee.Firstname
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Lastname:</b> @employee.Lastname
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Birthdate:</b> @employee.BirthDate.ToString("dd/MM/yyyy")
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Phone:</b> @(employee.Phone ?? "N/A")
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Email:</b> @(employee.Email ?? "N/A")
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">City:</b> @(employee.Address?.City ?? "N/A")
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Zipcode:</b> @(employee.Address?.PostalCode ?? "N/A")
+            </p>
+        </div>
+        <div class="col-6">
+            <h2 class="mb-2">Work information</h2>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Site:</b> @(site?.Name ?? "N/A")
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Site description:</b> @(site?.Description ?? "N/A")
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Address:</b> @(employee.Address?.City ?? "N/A"), @(employee.Address?.Street ?? "N/A")
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Job:</b> @(service?.Name ?? "N/A")
+            </p>
+            <p style="font-size: 1.1rem">
+                <b style="font-weight: bold">Job description:</b> @(service?.Description ?? "N/A")
+            </p>
+        </div>
+    </div>
+
+    <h3 class="mb-2">Documents</h3>
+    @if (documents == null)
+    {
+        <LoadingSpinner/>
+    }
+    else
+    {
+        <div class="row justify-content-center">
+            <table class="table table-hover table-responsive table-striped">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Content Type</th>
+                    <th>File</th>
+                    <th>Created At</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var document in documents)
+                {
+                    <tr>
+                        <td>@document.Name</td>
+                        <td>@document.Description</td>
+                        <td>
+                            <div style="display: flex; align-items: center; justify-content: center; height: 50px">
+                                @if (document.ContentType!.Contains("image"))
+                                {
+                                    <i class="fa-solid fa-file-image fa-2xl"></i>
+                                }
+                                else if (document.ContentType.Contains("pdf"))
+                                {
+                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                }
+                                else
+                                {
+                                    <span>
+                                        Document hasn't been found
+                                    </span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            @if (document.Link != null)
+                            {
+                                <a target="_blank" href="@DocumentRequests.GetDocumentViaUrl(document.Link)">@document.Name - link</a>
+                            }
+                            else
+                            {
+                                <span>
+                                    Document link hasn't been found
+                                </span>
+                            }
+                        </td>
+                        <td>@document.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    private Employee? employee;
+    private ICollection<Document>? documents;
+    private Service? service;
+    private Site? site;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Id = Id == 0 ? 1 : Id;
+
+        employee = await EmployeeRequests.GetEmployeeByIdAsync(Id);
+        if (employee is null) NavigationManager.NavigateTo("/notfound");
+        
+        service = employee!.ServiceId != null ? await ServiceRequests.GetServiceByIdAsync(employee.ServiceId ?? 0) : null;
+        site = employee.SiteId != null ? await SiteRequests.GetSiteByIdAsync(employee.SiteId ?? 0) : null;
+
+        documents = await DocumentRequests.GetDocumentsByEmployeeIdAsync(Id);
+    }
+
+}

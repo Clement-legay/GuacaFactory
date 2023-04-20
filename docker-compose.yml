@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  guacafactory:
+    image: mcr.microsoft.com/dotnet/sdk:7.0
+    ports:
+      - "8000:5177"
+    volumes:
+      - ./:/app
+    command: >
+      bash -c "
+        cd /app
+        echo $API_URL
+        dotnet restore
+        dotnet run --Urls=http://0.0.0.0:5177
+      "

@@ -1,6 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace GuacaFactory.Shared.Models;
 
@@ -16,6 +14,8 @@ public class Service
     public int? UpdatedBy { get; set; }
     public Administrator? CreatedByAdministrator { get; set; }
     public Administrator? UpdatedByAdministrator { get; set; }
+
+    public int EmployeesCount { get; set; }
 }
 
 public class ServiceRegistryDto

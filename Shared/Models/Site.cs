@@ -16,6 +16,8 @@ public class Site
     public int? UpdatedBy { get; set; }
     public Administrator? CreatedByAdministrator { get; set; }
     public Administrator? UpdatedByAdministrator { get; set; }
+
+    public int EmployeesCount { get; set; }
 }
 
 public class SiteRegistryDto

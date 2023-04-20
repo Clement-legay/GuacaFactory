@@ -1,0 +1,51 @@
+﻿@page "/sites"
+@inject ISiteRequests SiteRequests
+
+<PageTitle>GuacaFactory - Sites</PageTitle>
+
+<h1>Sites</h1>
+
+<p>
+    GuacaFactory's different sites are listed below.
+</p>
+
+@if (sites == null)
+{
+    <LoadingSpinner/>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>City</th>
+            <th>Employes</th>
+            <th>Created At</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var site in sites)
+        {
+            <tr>
+                <td>@site.Name</td>
+                <td>@site.Description</td>
+                <td>@(site.Address?.City ?? "Unknown")</td>
+                <td>@site.EmployeesCount</td>
+                <td>@site.CreatedAt.ToString("dd/MM/yyyy")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private ICollection<Site>? sites;
+
+    protected override async Task OnInitializedAsync()
+    {
+        sites = await SiteRequests.GetSitesAsync(1, 10);
+    }
+
+}

@@ -1,15 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.4" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="6.0.0-preview.4.21253.5" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Blazored.SessionStorage" Version="2.3.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.Analyzers" Version="8.0.0-preview.3.23177.8" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.4" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.4" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+        <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="6.0.0-preview.4.21253.5" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0-preview.3.23174.8" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0-preview.3.23174.8" />
+    </ItemGroup>
 
+    <ItemGroup>
+        <Folder Include="wwwroot\image" />
+    </ItemGroup>
 </Project>

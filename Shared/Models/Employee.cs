@@ -26,6 +26,10 @@ public class Employee
     public Service? Service { get; set; }
     public Site? Site { get; set; }
     public Administrator? Administrator { get; set; }
+
+    public string? PictureUrl { get; set; }
+    public string? SiteName { get; set; }
+    public string? ServiceName { get; set; }
 }
 
 public class EmployeeRegistryDto
@@ -42,7 +46,7 @@ public class EmployeeRegistryDto
 }
 
 public class EmployeeUpdateDto
-{ 
+{
     public string? Firstname { get; set; }
     public string? Lastname { get; set; }
     public string? Email { get; set; }

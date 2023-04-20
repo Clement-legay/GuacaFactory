@@ -1,0 +1,149 @@
+﻿@page "/employees"
+@inject IEmployeeRequests EmployeeRequests
+@inject IDocumentRequests DocumentRequests
+@inject NavigationManager NavigationManager
+
+<PageTitle>GuacaFactory - Employees</PageTitle>
+
+<h1>Employees</h1>
+
+<p>
+    GuacaFactory's employees are the best in the world. They are the ones who make our products and services possible.
+</p>
+
+@if (employees == null)
+{
+    <LoadingSpinner/>
+}
+else
+{
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="row justify-content-end">
+                <div class="col-5">
+                    <input type="text" @oninput="OnSearchValueChanged" class="form-control" placeholder="Search by name"/>
+                </div>
+            </div>
+        </div>
+        <table class="table table-hover table-responsive table-striped">
+            <thead>
+            <tr>
+                <th>Picture</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>City</th>
+                <th>Service</th>
+                <th>Site</th>
+                <th>Created At</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var employee in employees)
+            {
+                <tr style="cursor: pointer" @onclick="() => SelectEmployee(employee.Id)">
+                    <td>
+                        @if (employee.PictureUrl != null)
+                        {
+                            <img src="@DocumentRequests.GetDocumentViaUrl(employee.PictureUrl)" style="height: auto; width: 100px; aspect-ratio: 1/1; overflow: hidden;" alt="Employee picture" class="img-thumbnail"/>
+                        }
+                        else
+                        {
+                            <img src="image/account-25.png" style="height: auto; width: 100px; aspect-ratio: 1/1" alt="Employee picture" class="img-thumbnail"/>
+                        }
+                    </td>
+                    <td>@employee.Firstname @employee.Lastname</td>
+                    <td>@employee.Phone</td>
+                    <td>@(employee.Address?.City ?? "Unknown")</td>
+                    <td>@employee.ServiceName</td>
+                    <td>@employee.SiteName</td>
+                    <td>@employee.CreatedAt.ToString("dd/MM/yyyy")</td>
+                </tr>
+            }
+            </tbody>
+            <tfoot>
+            <th colspan="12">
+                <div class="row justify-content-between">
+                    <div class="col-6">
+                        <div class="row">
+                            <div>
+                                <input type="number" value="@resultsPerPage" @onchange="OnResultsPerPageChanged" class="form-control" style="width: 100px; display: inline-block"/>
+                                <span>result(s) per page</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col">
+                                <button class="btn btn-primary" @onclick="OnPreviousClicked">Previous</button>
+                            </div>
+                            <div class="col">
+                                <div>
+                                    <input type="number" value="@currentPage" @onchange="OnPageChanged" class="form-control" style="width: 50px; display: inline-block"/>
+                                    <span>of 10</span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <button class="btn btn-primary" @onclick="OnNextClicked">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </th>
+            </tfoot>
+        </table>
+    </div>
+}
+
+@code {
+    private ICollection<Employee>? employees;
+    private int currentPage = 1;
+    private int resultsPerPage = 10;
+    private string searchValue = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, currentPage, resultsPerPage);
+    }
+
+    private async Task OnPageChanged(ChangeEventArgs e)
+    {
+        currentPage = e.Value!.ToString() == "" ? 1 : int.Parse(e.Value.ToString() ?? string.Empty);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
+    }
+
+    private async Task OnResultsPerPageChanged(ChangeEventArgs e)
+    {
+        resultsPerPage = e.Value!.ToString() == "" ? 10 : int.Parse(e.Value.ToString() ?? string.Empty);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
+    }
+
+    private async Task OnPreviousClicked()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
+        }
+    }
+
+    private void SelectEmployee(int id)
+    {
+        NavigationManager.NavigateTo($"/employees/{id}");
+    }
+
+    private async Task OnNextClicked()
+    {
+        if (currentPage < 10)
+        {
+            currentPage++;
+            employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
+        }
+    }
+
+    private async Task OnSearchValueChanged(ChangeEventArgs e)
+    {
+        searchValue = e.Value!.ToString() ?? "";
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, currentPage, resultsPerPage);
+    }
+
+}

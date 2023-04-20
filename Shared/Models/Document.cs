@@ -29,7 +29,7 @@ public class DocumentRegistryDto
     [Required] public IFormFile? File { get; set; }
 
     [Required] public int? EmployeeId { get; set; }
-    
+
     [Required] public int? DocumentTypeId { get; set; }
 }
 

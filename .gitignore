@@ -319,6 +319,7 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 appsettings.json
+appsettings.Development.json
 
 # OpenCover UI analysis results
 OpenCover/
@@ -343,3 +344,5 @@ healthchecksdb
 
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
+/appsettings.Development.json
+/.env
