@@ -1,0 +1,74 @@
+@page "/admin/account"
+@inject ISessionValues SessionValues
+@inject IEmployeeRequests EmployeeRequests
+@inject NavigationManager NavigationManager
+
+<h3 class="mb-5">AccountPage</h3>
+
+@if (_administrator is null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <div class="row justify-content-center">
+        <div class="col-10">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row my-1">
+                        <div class="col-12">
+                            <h2 class="alert alert-info" style="font-size: 1.2em">You are actually logged as an administrator</h2>
+                        </div>
+                    </div>
+                    @if (_employeeAdmin is null)
+                    {
+                        <LoadingSpinner />
+                    }
+                    else
+                    {
+                        <div class="row my-1 p-4">
+                            <div class="col-6">
+                                <p style="font-size: 1.2em">Firstname: @_employeeAdmin.Firstname</p>
+                            </div>
+                            <div class="col-6">
+                                <p style="font-size: 1.2em">Lastname: @_employeeAdmin.Lastname</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer">
+                    <div class="row justify-content-end">
+                        <div class="col-auto">
+                            <button @onclick="LogoutClicked" class="btn btn-danger">Logout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private Administrator? _administrator;
+    private Employee? _employeeAdmin;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _administrator = await SessionValues.GetSessionUser();
+        if (_administrator?.EmployeeId is null)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+        
+        var employeeId = (int)_administrator!.EmployeeId!;
+        _employeeAdmin = await EmployeeRequests.GetEmployeeByIdAsync(employeeId);
+    }
+    
+    private void LogoutClicked()
+    {
+        SessionValues.RemoveSessionUser();
+        SessionValues.RemoveCookieAsync("token");
+        
+        NavigationManager.NavigateTo("/", true);
+    }
+}

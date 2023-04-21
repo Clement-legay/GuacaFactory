@@ -31,13 +31,14 @@ public class EmployeeRequests : IEmployeeRequests
         var userConnected = await _sessionValues.GetSessionUser();
         var apiKey = await _httpClient.GetStringAsync($"{Url}/api/{Version}/basics/apikey");
         
-        var token = userConnected?.Employee?.Username is null
+        var token = userConnected?.EmployeeUsername is null
             ? Convert.ToBase64String(Encoding.UTF8.GetBytes(apiKey))
             : Convert.ToBase64String(
-                Encoding.UTF8.GetBytes($"{userConnected.Employee.Username}:{userConnected.Employee.Username}"));
-
+                Encoding.UTF8.GetBytes($"{apiKey}:{userConnected.EmployeeUsername}"));
+        
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
+
 
     #endregion
 
@@ -69,11 +70,11 @@ public class EmployeeRequests : IEmployeeRequests
         return employee;
     }
 
-    public async Task<ICollection<Employee>?> GetEmployeesBySiteIdAsync(int siteId, int page, int rows)
+    public async Task<ICollection<Employee>?> GetEmployeesBySiteIdAsync(int siteId, string search, int page, int rows)
     {
         await InitializeAsync();
 
-        var result = await _httpClient.GetAsync($"{_apiUrl}/site/{siteId}?page={page}&rows={rows}");
+        var result = await _httpClient.GetAsync($"{_apiUrl}/site/{siteId}?search={search}&page={page}&rows={rows}");
         if (!result.IsSuccessStatusCode) return null;
 
         var content = await result.Content.ReadAsStringAsync();
@@ -82,11 +83,11 @@ public class EmployeeRequests : IEmployeeRequests
         return employees;
     }
 
-    public async Task<ICollection<Employee>?> GetEmployeesByServiceIdAsync(int serviceId, int page, int rows)
+    public async Task<ICollection<Employee>?> GetEmployeesByServiceIdAsync(int serviceId, string search, int page, int rows)
     {
         await InitializeAsync();
 
-        var result = await _httpClient.GetAsync($"{_apiUrl}/service/{serviceId}?page={page}&rows={rows}");
+        var result = await _httpClient.GetAsync($"{_apiUrl}/service/{serviceId}?search={search}&page={page}&rows={rows}");
         if (!result.IsSuccessStatusCode) return null;
 
         var content = await result.Content.ReadAsStringAsync();

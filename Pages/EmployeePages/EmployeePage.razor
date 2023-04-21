@@ -2,6 +2,7 @@
 @inject IEmployeeRequests EmployeeRequests
 @inject IDocumentRequests DocumentRequests
 @inject IServiceRequests ServiceRequests
+@inject ISessionValues SessionValues
 @inject ISiteRequests SiteRequests
 @inject NavigationManager NavigationManager
 
@@ -15,6 +16,34 @@
 else
 {
     <PageTitle>GuacaFactory - @employee.Firstname @employee.Lastname</PageTitle>
+
+    @if (administrator?.EmployeeUsername is not null)
+    {
+        <div class="row justify-content alert alert-info align-content-center">
+            <div class="col-8">
+                <p style="font-size: 1.2em">You are logged and using the administration mode</p>
+            </div>
+            <div class="col-4">
+                <div class="row justify-content-end">
+                    <div class="col-auto">
+                        <button class="btn btn-primary" @onclick="OnEditButtonClick">Edit</button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-danger" @onclick="OnDeleteButtonClick">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        @if (isDeleteModalOpen)
+        {
+            <DeleteModalEmployee Employee="employee" IsOpen="isDeleteModalOpen"/>
+        }
+        @if (isEditModalOpen)
+        {
+            <EditModalEmployee Employee="employee" IsOpen="isEditModalOpen"/>
+        }
+    }
 
     <div class="row justify-content-evenly mb-5">
         <div class="col-8">
@@ -166,6 +195,10 @@ else
     private ICollection<Document>? documents;
     private Service? service;
     private Site? site;
+    private Administrator? administrator;
+    
+    private bool isEditModalOpen = false;
+    private bool isDeleteModalOpen = false;
 
     [Parameter]
     public int Id { get; set; }
@@ -173,6 +206,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         Id = Id == 0 ? 1 : Id;
+        
+        administrator = await SessionValues.GetSessionUser();
 
         employee = await EmployeeRequests.GetEmployeeByIdAsync(Id);
         if (employee is null) NavigationManager.NavigateTo("/notfound");
@@ -183,4 +218,15 @@ else
         documents = await DocumentRequests.GetDocumentsByEmployeeIdAsync(Id);
     }
 
+    private void OnEditButtonClick()
+    {
+        
+        Console.WriteLine("Edit button clicked");
+        isEditModalOpen = true;
+    }
+    
+    private void OnDeleteButtonClick()
+    {
+        isDeleteModalOpen = true;
+    }
 }

@@ -1,0 +1,67 @@
+﻿@page "/sites"
+@inject ISiteRequests SiteRequests
+@inject ISessionValues SessionValues
+@inject NavigationManager NavigationManager
+
+<PageTitle>GuacaFactory - Sites</PageTitle>
+
+@if (administrator?.EmployeeUsername is not null)
+    {
+        <div class="row justify-content-between alert alert-info align-content-center">
+            <div class="col-8">
+                <p style="font-size: 1.2em">You are logged and using the administration mode</p>
+            </div>
+            <div class="col-2">
+                <button class="btn btn-primary" @onclick="OnCreateClick">Create</button>
+            </div>
+        </div>
+
+        @if (isCreateModalOpen)
+        {
+            <CreateModalSite IsOpen="isCreateModalOpen"/>
+        }
+    }
+
+<h1>Sites</h1>
+
+<p>
+    GuacaFactory's different sites are listed below.
+</p>
+
+@if (sites == null)
+{
+    <LoadingSpinner/>
+}
+else
+{
+    <div class="row justify-content-center">
+        @foreach (var site in sites)
+        {
+            <div class="col-12" @onclick="() => OpenSelectedSite(site.Id)">
+                <SiteCard Site="site"/>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private ICollection<Site>? sites;
+    private bool isCreateModalOpen = false;
+    private Administrator? administrator;
+
+    protected override async Task OnInitializedAsync()
+    {
+        administrator = await SessionValues.GetSessionUser();
+        sites = await SiteRequests.GetSitesAsync(1, 10);
+    }
+
+    private void OnCreateClick()
+    {
+        isCreateModalOpen = true;
+    }
+    
+    private void OpenSelectedSite(int? siteId)
+    {
+        NavigationManager.NavigateTo($"/sites/{siteId}");
+    }
+}

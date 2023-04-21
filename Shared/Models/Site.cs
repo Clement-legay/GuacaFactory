@@ -4,9 +4,10 @@ namespace GuacaFactory.Shared.Models;
 
 public class Site
 {
-    public int? Id { get; set; }
+    public int Id { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
+    public string? PictureUrl { get; set; }
     public int? AddressId { get; set; }
     public Address? Address { get; set; }
     public ICollection<Employee>? Employees { get; set; }

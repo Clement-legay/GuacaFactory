@@ -6,6 +6,7 @@ public interface ISiteRequests
 {
     Task<ICollection<Site>?> GetSitesAsync(int page, int rows);
     Task<Site?> GetSiteByIdAsync(int id);
+    string GetSitePictureUrl(string url);
     Task<Site?> AddSiteAsync(MultipartFormDataContent dataContent);
     Task<Site?> UpdateSiteAsync(int id, MultipartFormDataContent dataContent);
     Task<Site?> DeleteSiteAsync(int id);

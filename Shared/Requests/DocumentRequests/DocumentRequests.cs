@@ -31,13 +31,14 @@ public class DocumentRequests : IDocumentRequests
         var userConnected = await _sessionValues.GetSessionUser();
         var apiKey = await _httpClient.GetStringAsync($"{Url}/api/{Version}/basics/apikey");
         
-        var token = userConnected?.Employee?.Username is null
+        var token = userConnected?.EmployeeUsername is null
             ? Convert.ToBase64String(Encoding.UTF8.GetBytes(apiKey))
             : Convert.ToBase64String(
-                Encoding.UTF8.GetBytes($"{userConnected.Employee.Username}:{userConnected.Employee.Username}"));
-
+                Encoding.UTF8.GetBytes($"{apiKey}:{userConnected.EmployeeUsername}"));
+        
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
+
 
     #endregion
 
@@ -90,6 +91,7 @@ public class DocumentRequests : IDocumentRequests
 
     public string GetDocumentViaUrl(string url)
     {
+        if (url.StartsWith("https")) return url;
         var documentUrl = $"{_apiUrl}/{url}";
         return documentUrl;
     }

@@ -31,13 +31,14 @@ public class DocumentTypeRequests : IDocumentTypeRequests
         var userConnected = await _sessionValues.GetSessionUser();
         var apiKey = await _httpClient.GetStringAsync($"{Url}/api/{Version}/basics/apikey");
         
-        var token = userConnected?.Employee?.Username is null
+        var token = userConnected?.EmployeeUsername is null
             ? Convert.ToBase64String(Encoding.UTF8.GetBytes(apiKey))
             : Convert.ToBase64String(
-                Encoding.UTF8.GetBytes($"{userConnected.Employee.Username}:{userConnected.Employee.Username}"));
-
+                Encoding.UTF8.GetBytes($"{apiKey}:{userConnected.EmployeeUsername}"));
+        
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
+
 
     #endregion
 

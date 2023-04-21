@@ -1,0 +1,297 @@
+@using System.ComponentModel
+@using System.Data
+@using System.Globalization
+@using Microsoft.AspNetCore.Http
+@inject IEmployeeRequests EmployeeRequests
+@inject IAddressRequests AddressRequests
+@inject IServiceRequests ServiceRequests
+@inject ISiteRequests SiteRequests
+@inject NavigationManager NavigationManager
+
+<div class="modal-backdrop fade show"></div>
+
+<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Update - @Employee.Firstname @Employee.Lastname</h5>
+                <button type="button" @onclick="Close" style="border: none; background: none" data-dismiss="modal" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (_errorMessage is not null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @_errorMessage
+                    </div>
+                }
+                @if (_loading)
+                {
+                    <LoadingSpinner />
+                }
+                else
+                {
+                 <form>
+                    <div class="row justify-content-start">
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="FirstName" value="@_firstname" @oninput="OnInputFirstName" class="form-control" placeholder="Enter FirstName" name="Firstname"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="LastName" value="@_lastname" @oninput="OnInputLastName" class="form-control" placeholder="Enter LastName" name="Lastname"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="Email" value="@_email" @oninput="OnInputEmail" type="email" class="form-control" placeholder="Enter Email" name="Email"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="Phone" value="@_phone" @oninput="OnInputPhone" type="tel" class="form-control" placeholder="Enter Phone Number" name="Phone"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="HomePhone" value="@_homePhone" @oninput="OnInputHomePhone" type="tel" class="form-control" placeholder="Enter HomePhone Number" name="HomePhone"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="BirthDate" value="@_birthDate" @oninput="OnInputBirthDate" type="date" class="form-control" placeholder="Enter BirthDate" name="BirthDate"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                @if (_sites is not null)
+                                {
+                                    <select value="@_siteId" aria-label="SiteId" @oninput="OnInputSiteId" class="form-control" name="SiteId">
+                                        <option value="0">Select Site</option>
+                                        @foreach (var site in _sites)
+                                        {
+                                            <option value="@site.Id">@site.Name</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input placeholder="Loading Sites..." disabled class="form-control"/>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                @if (_services is not null)
+                                {
+                                    <select value="@_serviceId" aria-label="ServiceId" @oninput="OnInputServiceId" class="form-control" name="ServiceId">
+                                        <option value="0">Select Service</option>
+                                        @foreach (var service in _services)
+                                        {
+                                            <option value="@service.Id">@service.Name</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input placeholder="Loading Services..." disabled class="form-control"/>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="City" value="@_city" @oninput="OnInputCity" class="form-control" placeholder="Enter City" name="City"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="Street" value="@_street" @oninput="OnInputStreet" class="form-control" placeholder="Enter Street" name="Street"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="PostalCode" value="@_postalCode" @oninput="OnInputPostalCode" class="form-control" placeholder="Enter PostalCode" name="PostalCode"/>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>   
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" @onclick="Close" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" @onclick="UpdateEmployee" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public Employee Employee { get; set; }
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+ 
+    private ICollection<Service>? _services;
+    private ICollection<Site>? _sites;
+    
+    private string? _errorMessage;
+    private bool _loading = true;
+
+    private string? _firstname;
+    private string? _lastname;
+    private string? _email;
+    private string? _phone;
+    private string? _homePhone;
+    private string? _birthDate;
+    private int? _siteId;
+    private int? _serviceId;
+    
+    private string? _city;
+    private string? _street;
+    private string? _postalCode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _services = await ServiceRequests.GetServicesAsync(1, 100);
+        _sites = await SiteRequests.GetSitesAsync(1, 100);
+        
+        _firstname = Employee.Firstname;
+        _lastname = Employee.Lastname;
+        _email = Employee.Email;
+        _phone = Employee.Phone;
+        _homePhone = Employee.HomePhone;
+        _birthDate = Employee.BirthDate.ToString("yyyy-MM-dd");
+        _siteId = Employee.SiteId;
+        _serviceId = Employee.ServiceId;
+            
+        _city = Employee.Address?.City ?? null;
+        _street = Employee.Address?.Street ?? null;
+        _postalCode = Employee.Address?.PostalCode ?? null;
+        
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+    }
+    
+    private void OnInputFirstName(ChangeEventArgs e)
+    {
+        _firstname = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputLastName(ChangeEventArgs e)
+    {
+        _lastname = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputEmail(ChangeEventArgs e)
+    {
+        _email = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputPhone(ChangeEventArgs e)
+    {
+        _phone = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputHomePhone(ChangeEventArgs e)
+    {
+        _homePhone = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputBirthDate(ChangeEventArgs e)
+    {
+        _birthDate = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputSiteId(ChangeEventArgs e)
+    {
+        int? value = int.Parse(e.Value!.ToString()!) > 0 ? int.Parse(e.Value.ToString()!) : null;
+        _siteId = value;
+        CheckRule(e);
+    }
+    
+    private void OnInputServiceId(ChangeEventArgs e)
+    {
+        int? value = int.Parse(e.Value!.ToString()!) > 0 ? int.Parse(e.Value.ToString()!) : null;
+        _serviceId = value;
+        CheckRule(e);
+    }
+    
+    private void OnInputCity(ChangeEventArgs e)
+    {
+        _city = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputStreet(ChangeEventArgs e)
+    {
+        _street = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputPostalCode(ChangeEventArgs e)
+    {
+        _postalCode = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+
+    private async Task UpdateEmployee()
+    {
+        var multipartAddress = new MultipartFormDataContent();
+        if (_city != null) multipartAddress.Add(new StringContent(_city), "City");
+        if (_street != null) multipartAddress.Add(new StringContent(_street), "Street");
+        if (_postalCode != null) multipartAddress.Add(new StringContent(_postalCode), "PostalCode");
+        
+        var multipartEmployee = new MultipartFormDataContent();
+        
+        if (Employee.Address is not null) await AddressRequests.UpdateAddressAsync(Employee.Address!.Id, multipartAddress);
+        else
+        {
+            var address = await AddressRequests.AddAddressAsync(multipartAddress);
+            if (address is null)
+            {
+                _errorMessage = "Address could not be added";
+                return;
+            }
+            multipartEmployee.Add(new StringContent(address.Id.ToString()!), "AddressId");
+        }
+        
+        if (_firstname != null) multipartEmployee.Add(new StringContent(_firstname), "Firstname");
+        if (_lastname != null) multipartEmployee.Add(new StringContent(_lastname), "Lastname");
+        if (_email != null) multipartEmployee.Add(new StringContent(_email), "Email");
+        if (_phone != null) multipartEmployee.Add(new StringContent(_phone), "Phone");
+        if (_homePhone != null) multipartEmployee.Add(new StringContent(_homePhone), "HomePhone");
+        if (_birthDate != null) multipartEmployee.Add(new StringContent(_birthDate.ToString()!), "BirthDate");
+        if (_siteId != null) multipartEmployee.Add(new StringContent(_siteId.ToString()!), "SiteId");
+        if (_serviceId != null) multipartEmployee.Add(new StringContent(_serviceId.ToString()!), "ServiceId");
+
+
+        var response = await EmployeeRequests.UpdateEmployeeAsync(Employee.Id, multipartEmployee);
+        if (response is null)
+        {
+            _errorMessage = "Employee could not be updated";
+            return;
+        }
+        Close();
+    }
+
+    private void CheckRule(ChangeEventArgs e)
+    {
+        Console.WriteLine("CheckRule");
+    }
+}

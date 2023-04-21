@@ -2,8 +2,23 @@
 @inject IEmployeeRequests EmployeeRequests
 @inject IDocumentRequests DocumentRequests
 @inject NavigationManager NavigationManager
+@inject ISessionValues SessionValues
 
 <PageTitle>GuacaFactory - Employees</PageTitle>
+
+@if (administrator?.EmployeeUsername is not null)
+    {
+        <div class="row justify-content alert alert-info align-content-center">
+            <div class="col-8">
+                <p style="font-size: 1.2em">You are logged and using the administration mode</p>
+            </div>
+        </div>
+        
+        @if (isCreateModalOpen)
+        {
+            <CreateModalEmployee IsOpen="isCreateModalOpen"/>
+        }
+    }
 
 <h1>Employees</h1>
 
@@ -19,11 +34,25 @@ else
 {
     <div class="row justify-content-center">
         <div class="col-12">
+        @if (administrator?.EmployeeUsername is not null)
+        {
+            <div class="row justify-content-between">
+                <div class="col-2">
+                    <button class="btn btn-primary" @onclick="OnCreateButtonClick">Create</button>
+                </div>
+                <div class="col-5">
+                    <input type="text" @oninput="OnSearchValueChanged" class="form-control" placeholder="Search by name"/>
+                </div>
+            </div>
+        }
+        else
+        {
             <div class="row justify-content-end">
                 <div class="col-5">
                     <input type="text" @oninput="OnSearchValueChanged" class="form-control" placeholder="Search by name"/>
                 </div>
             </div>
+        }
         </div>
         <table class="table table-hover table-responsive table-striped">
             <thead>
@@ -76,10 +105,10 @@ else
                             <div class="col">
                                 <button class="btn btn-primary" @onclick="OnPreviousClicked">Previous</button>
                             </div>
-                            <div class="col">
+                            <div class="col-auto">
                                 <div>
-                                    <input type="number" value="@currentPage" @onchange="OnPageChanged" class="form-control" style="width: 50px; display: inline-block"/>
-                                    <span>of 10</span>
+                                    <span>Page </span>
+                                    <input type="number" value="@currentPage" @onchange="OnPageChanged" class="form-control" style="width: 75px; display: inline-block"/>
                                 </div>
                             </div>
                             <div class="col">
@@ -95,13 +124,16 @@ else
 }
 
 @code {
+    private bool isCreateModalOpen = false;
     private ICollection<Employee>? employees;
     private int currentPage = 1;
     private int resultsPerPage = 10;
     private string searchValue = "";
+    private Administrator? administrator;
 
     protected override async Task OnInitializedAsync()
     {
+        administrator = await SessionValues.GetSessionUser();
         employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, currentPage, resultsPerPage);
     }
 
@@ -125,25 +157,27 @@ else
             employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
         }
     }
-
+    
     private void SelectEmployee(int id)
     {
         NavigationManager.NavigateTo($"/employees/{id}");
     }
-
+    
     private async Task OnNextClicked()
     {
-        if (currentPage < 10)
-        {
-            currentPage++;
-            employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
-        }
+        currentPage++;
+        employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
     }
-
+    
     private async Task OnSearchValueChanged(ChangeEventArgs e)
     {
         searchValue = e.Value!.ToString() ?? "";
         employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, currentPage, resultsPerPage);
+    }
+    
+    private void OnCreateButtonClick()
+    {
+        isCreateModalOpen = true;
     }
 
 }

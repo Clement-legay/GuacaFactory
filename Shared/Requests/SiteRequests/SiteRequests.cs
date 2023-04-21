@@ -31,13 +31,14 @@ public class SiteRequests : ISiteRequests
         var userConnected = await _sessionValues.GetSessionUser();
         var apiKey = await _httpClient.GetStringAsync($"{Url}/api/{Version}/basics/apikey");
         
-        var token = userConnected?.Employee?.Username is null
+        var token = userConnected?.EmployeeUsername is null
             ? Convert.ToBase64String(Encoding.UTF8.GetBytes(apiKey))
             : Convert.ToBase64String(
-                Encoding.UTF8.GetBytes($"{userConnected.Employee.Username}:{userConnected.Employee.Username}"));
-
+                Encoding.UTF8.GetBytes($"{apiKey}:{userConnected.EmployeeUsername}"));
+        
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
+
 
     #endregion
 
@@ -67,6 +68,11 @@ public class SiteRequests : ISiteRequests
         var site = JsonSerializer.Deserialize<Site>(content,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         return site;
+    }
+    
+    public string GetSitePictureUrl(string url)
+    {
+        return url.StartsWith("https") ? url : $"{_apiUrl}/{url}";
     }
 
     public async Task<Site?> AddSiteAsync(MultipartFormDataContent dataContent)

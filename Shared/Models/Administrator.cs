@@ -14,7 +14,7 @@ public class Administrator
     public DateTime UpdatedAt { get; set; }
     public int? EmployeeId { get; set; }
     public Employee? Employee { get; set; }
-    public string? EmployeeUsername => Employee?.Username;
+    public string? EmployeeUsername { get; set; }
 }
 
 public class AdministratorRegistryDto

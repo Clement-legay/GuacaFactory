@@ -1,0 +1,185 @@
+@inject ISiteRequests SiteRequests
+@inject IAddressRequests AddressRequests
+@inject NavigationManager NavigationManager
+
+<div class="modal-backdrop fade show"></div>
+
+<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Create a new Site</h5>
+                <button type="button" @onclick="Close" style="border: none; background: none" data-dismiss="modal" aria-label="Close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                @if (_errorMessage is not null)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @_errorMessage
+                    </div>
+                }
+                <form>
+                    <div class="row justify-content-start">
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="Name" value="@_name" @oninput="OnInputName" class="form-control" placeholder="Enter Name" name="Name"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="LastName" value="@_description" @oninput="OnInputDescription" class="form-control" placeholder="Enter Description" name="Description"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <InputFile id="FileInput" _bl_2="" type="file" class="form-control" OnChange="@HandleFileUpload" accept="image/*" />
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="City" value="@_city" @oninput="OnInputCity" class="form-control" placeholder="Enter City" name="City"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="Street" value="@_street" @oninput="OnInputStreet" class="form-control" placeholder="Enter Street" name="Street"/>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                <input aria-label="PostalCode" value="@_postalCode" @oninput="OnInputPostalCode" class="form-control" placeholder="Enter PostalCode" name="PostalCode"/>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" @onclick="Close" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" @onclick="UpdateEmployee" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter]
+    public Site Site { get; set; }
+    
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    private string? _errorMessage;
+
+    private string? _name;
+    private string? _description;
+    private IBrowserFile? _file;
+    
+    private string? _city;
+    private string? _street;
+    private string? _postalCode;
+
+    protected override void OnInitialized()
+    {
+        _name = Site.Name;
+        _description = Site.Description;
+
+        _city = Site.Address?.City ?? null;
+        _street = Site.Address?.Street ?? null; 
+        _postalCode = Site.Address?.PostalCode ?? null;
+        
+        StateHasChanged();
+    }
+
+    private void Close()
+    {
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+    }
+    
+    private void OnInputName(ChangeEventArgs e)
+    {
+        _name = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputDescription(ChangeEventArgs e)
+    {
+        _description = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+
+    private void HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+    }
+    
+    private void OnInputCity(ChangeEventArgs e)
+    {
+        _city = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputStreet(ChangeEventArgs e)
+    {
+        _street = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+    
+    private void OnInputPostalCode(ChangeEventArgs e)
+    {
+        _postalCode = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
+
+    private async Task UpdateEmployee()
+    {
+        var multipartAddress = new MultipartFormDataContent();
+        if (_city != null) multipartAddress.Add(new StringContent(_city), "City");
+        if (_street != null) multipartAddress.Add(new StringContent(_street), "Street");
+        if (_postalCode != null) multipartAddress.Add(new StringContent(_postalCode), "PostalCode");
+        
+        var multipartSite = new MultipartFormDataContent();
+
+        if (Site.Address is null)
+        {
+            var result = await AddressRequests.AddAddressAsync(multipartAddress);
+            if (result is null)
+            {
+                _errorMessage = "Address could not be created";
+                return;
+            }
+            multipartSite.Add(new StringContent(result.Id.ToString()!), "AddressId");
+        }
+        else
+        {
+            var result = await AddressRequests.UpdateAddressAsync(Site.Address.Id, multipartAddress);
+            if (result is null)
+            {
+                _errorMessage = "Address could not be updated";
+                return;
+            }
+            multipartSite.Add(new StringContent(Site.Address.Id.ToString()!), "AddressId");
+        }
+
+        if (_name != null) multipartSite.Add(new StringContent(_name), "Name");
+        if (_description != null) multipartSite.Add(new StringContent(_description), "Description");
+        if (_file != null) multipartSite.Add(new StreamContent(_file.OpenReadStream()), "Picture", _file.Name);
+
+        var response = await SiteRequests.UpdateSiteAsync(Site.Id, multipartSite);
+        if (response is null)
+        {
+            _errorMessage = "Site could not be created";
+            return;
+        }
+        
+        Close();
+    }
+
+    private void CheckRule(ChangeEventArgs e)
+    {
+        Console.WriteLine("CheckRule");
+    }
+}
