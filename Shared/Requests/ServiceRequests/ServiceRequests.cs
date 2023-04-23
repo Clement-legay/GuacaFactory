@@ -69,6 +69,11 @@ public class ServiceRequests : IServiceRequests
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         return service;
     }
+    
+    public string GetServicePictureUrl(string url)
+    {
+        return url.StartsWith("https") ? url : $"{_apiUrl}/{url}";
+    }
 
     public async Task<Service?> AddServiceAsync(MultipartFormDataContent dataContent)
     {

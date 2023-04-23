@@ -1,21 +1,20 @@
-@page "/sites/{id:int}"
+@page "/jobs/{id:int}"
 @inject IEmployeeRequests EmployeeRequests
-@inject IDocumentRequests DocumentRequests
 @inject IServiceRequests ServiceRequests
+@inject IDocumentRequests DocumentRequests
 @inject ISessionValues SessionValues
-@inject ISiteRequests SiteRequests
 @inject NavigationManager NavigationManager
 
 
-@if (site == null)
+@if (service == null)
 {
-    <PageTitle>GuacaFactory - Site</PageTitle>
+    <PageTitle>GuacaFactory - Job</PageTitle>
 
     <LoadingSpinner/>
 }
 else
 {
-    <PageTitle>GuacaFactory - @site.Name</PageTitle>
+    <PageTitle>GuacaFactory - @service.Name</PageTitle>
 
     @if (administrator?.EmployeeUsername is not null)
     {
@@ -37,48 +36,47 @@ else
         
         @if (isDeleteModalOpen)
         {
-            <DeleteModalSite Site="site" IsOpen="isDeleteModalOpen"/>
+            <DeleteModalService service="service" IsOpen="isDeleteModalOpen"/>
         }
         @if (isEditModalOpen)
         {
-            <EditModalSite Site="site" IsOpen="isEditModalOpen"/>
+            <EditModalService service="service" IsOpen="isEditModalOpen"/>
         }
     }
 
     <div class="row justify-content-evenly mb-5">
         <div class="col-8">
-            <h1>@site.Name</h1>
+            <h1>@service.Name</h1>
             
             <p style="font-size: 1.5rem">
-                @site.Description
+                @service.Description
             </p>
                 
             <p style="font-size: 1.3rem">
-                <span style="font-weight: bold">Employees Count: </span> @site.EmployeesCount
+                <span style="font-weight: bold">Employees Count: </span> @service.EmployeesCount
             </p>
             
             <p style="font-size: 1.3rem">
-                <span style="font-weight: bold">Created on: </span> @site.CreatedAt.ToString("dd/MM/yyyy")
+                <span style="font-weight: bold">Created on: </span> @service.CreatedAt.ToString("dd/MM/yyyy")
             </p>
             
             <p style="font-size: 1.3rem">
-                <span style="font-weight: bold">Last Update: </span> @site.UpdatedAt.ToString("dd/MM/yyyy")
+                <span style="font-weight: bold">Last Update: </span> @service.UpdatedAt.ToString("dd/MM/yyyy")
             </p>
         </div>
         
         
         <div class="col-4">
-            @if (site.PictureUrl != null)
+            @if (service.PictureUrl != null)
             {
-                <img src="@SiteRequests.GetSitePictureUrl(site.PictureUrl)" style="height: auto; width: 100%; overflow: hidden;" alt="@site.Name" class="img-thumbnail"/>
+                <img src="@ServiceRequests.GetServicePictureUrl(service.PictureUrl)" style="height: auto; width: 100%; overflow: hidden;" alt="@service.Name" class="img-thumbnail"/>
             }
             else
             {
-                <img src="image/account-25.png" style="height: auto; width: 100%; aspect-ratio: 1/1" alt="@site.Name" class="img-thumbnail"/>
+                <img src="image/account-25.png" style="height: auto; width: 100%; aspect-ratio: 1/1" alt="@service.Name" class="img-thumbnail"/>
             }
         </div>
     </div>
-    
 
     @if (employees == null)
     {
@@ -171,7 +169,6 @@ else
 @code {
     private ICollection<Employee>? employees;
     private Service? service;
-    private Site? site;
     private Administrator? administrator;
     
     private int currentPage = 1;
@@ -190,10 +187,10 @@ else
         
         administrator = await SessionValues.GetSessionUser();
 
-        site = await SiteRequests.GetSiteByIdAsync(Id);
-        if (site is null) NavigationManager.NavigateTo("/notfound");
+        service = await ServiceRequests.GetServiceByIdAsync(Id);
+        if (service is null) NavigationManager.NavigateTo("/notfound");
 
-        employees = await EmployeeRequests.GetEmployeesBySiteIdAsync(Id, searchValue, currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByServiceIdAsync(Id, searchValue, currentPage, resultsPerPage);
     }
 
     private void OnEditButtonClick()
@@ -211,13 +208,13 @@ else
     private async Task OnPageChanged(ChangeEventArgs e)
     {
         currentPage = e.Value!.ToString() == "" ? 1 : int.Parse(e.Value.ToString() ?? string.Empty);
-        employees = await EmployeeRequests.GetEmployeesBySiteIdAsync(Id, searchValue, currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByServiceIdAsync(Id, searchValue, currentPage, resultsPerPage);
     }
 
     private async Task OnResultsPerPageChanged(ChangeEventArgs e)
     {
         resultsPerPage = e.Value!.ToString() == "" ? 10 : int.Parse(e.Value.ToString() ?? string.Empty);
-        employees = await EmployeeRequests.GetEmployeesBySiteIdAsync(Id, searchValue, currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByServiceIdAsync(Id, searchValue, currentPage, resultsPerPage);
     }
 
     private async Task OnPreviousClicked()
@@ -225,7 +222,7 @@ else
         if (currentPage > 1)
         {
             currentPage--;
-            employees = await EmployeeRequests.GetEmployeesBySiteIdAsync(Id, searchValue, currentPage, resultsPerPage);
+            employees = await EmployeeRequests.GetEmployeesByServiceIdAsync(Id, searchValue, currentPage, resultsPerPage);
         }
     }
     
@@ -237,12 +234,12 @@ else
     private async Task OnNextClicked()
     {
         currentPage++;
-        employees = await EmployeeRequests.GetEmployeesBySiteIdAsync(Id, searchValue, currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByServiceIdAsync(Id, searchValue, currentPage, resultsPerPage);
     }
     
     private async Task OnSearchValueChanged(ChangeEventArgs e)
     {
         searchValue = e.Value!.ToString() ?? "";
-        employees = await EmployeeRequests.GetEmployeesBySiteIdAsync(Id, searchValue, currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByServiceIdAsync(Id, searchValue, currentPage, resultsPerPage);
     }
 }

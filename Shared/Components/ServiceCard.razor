@@ -1,0 +1,31 @@
+@inject IServiceRequests ServiceRequests
+
+<div style="overflow: hidden; border-radius: 10px; border: 1px solid #e0e0e0; margin-bottom: 10px; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform = 'scale(1.01)';" onmouseout="this.style.transform = 'scale(1)';">
+    <div class="row">
+        <div class="col-3">
+            @if(service.PictureUrl == null)
+            {
+                <img alt="@service.Name" src="https://placehold.it/150x150" style="height: 100%; width: 100%; object-fit: cover;"/>
+            }
+            else
+            {
+                <img alt="@service.Name" src="@ServiceRequests.GetServicePictureUrl(service.PictureUrl)" style="height: 100%; width: 100%; object-fit: cover;"/>
+            }
+        </div>
+        <div class="col-8">
+            <div class="card-body">
+                <h5 class="card-title">@service.Name</h5>
+                <p class="card-text">@service.Description</p>
+                
+                <p class="card-text"><span style="font-weight: bold">Nombre d'employés:</span> @service.EmployeesCount</p>
+                
+                <p class="card-text"><small class="text-muted">Last updated @service.UpdatedAt.ToString("dd/MM/yyyy")</small></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Service service { get; set; }
+}

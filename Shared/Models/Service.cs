@@ -8,6 +8,7 @@ public class Service
     public string? Name { get; set; }
     public string? Description { get; set; }
     public ICollection<Employee>? Employees { get; set; }
+    public string? PictureUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int? CreatedBy { get; set; }

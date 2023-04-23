@@ -61,7 +61,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" @onclick="Close" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" @onclick="UpdateEmployee" class="btn btn-primary">Create</button>
+                <button type="button" @onclick="CreateSite" class="btn btn-primary">Create</button>
             </div>
         </div>
     </div>
@@ -122,7 +122,7 @@
         CheckRule(e);
     }
 
-    private async Task UpdateEmployee()
+    private async Task CreateSite()
     {
         var multipartAddress = new MultipartFormDataContent();
         if (_city != null) multipartAddress.Add(new StringContent(_city), "City");

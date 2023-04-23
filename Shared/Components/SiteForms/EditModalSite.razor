@@ -8,7 +8,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Create a new Site</h5>
+                <h5 class="modal-title" id="modalLabel">Update a Site</h5>
                 <button type="button" @onclick="Close" style="border: none; background: none" data-dismiss="modal" aria-label="Close">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -58,7 +58,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" @onclick="Close" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" @onclick="UpdateEmployee" class="btn btn-primary">Create</button>
+                <button type="button" @onclick="UpdateSite" class="btn btn-primary">Save Changes</button>
             </div>
         </div>
     </div>
@@ -134,7 +134,7 @@
         CheckRule(e);
     }
 
-    private async Task UpdateEmployee()
+    private async Task UpdateSite()
     {
         var multipartAddress = new MultipartFormDataContent();
         if (_city != null) multipartAddress.Add(new StringContent(_city), "City");

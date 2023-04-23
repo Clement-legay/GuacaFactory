@@ -1,6 +1,5 @@
-@using System.ComponentModel
 @inject NavigationManager NavigationManager
-@inject IEmployeeRequests EmployeeRequests
+@inject IServiceRequests ServiceRequests
 
 <div class="modal-backdrop fade show"></div>
 
@@ -8,19 +7,19 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Delete - @Employee.Firstname @Employee.Lastname</h5>
+                <h5 class="modal-title" id="modalLabel">Delete - @service.Name</h5>
                 <button type="button" @onclick="Close" style="border: none; background: none" data-dismiss="modal" aria-label="Close">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             <div class="modal-body">
                 @if (ErrorMessage != null)
-                                    {
-                                    <div class="alert alert-danger" role="alert">
-                                        @ErrorMessage
-                                    </div>
-                                }
-                <p>Are you sure you want to delete @Employee.Firstname @Employee.Lastname ?</p>
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @ErrorMessage
+                    </div>
+                }
+                <p>Are you sure you want to delete @service.Name ?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" @onclick="Close" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -45,7 +44,7 @@
     private string? ErrorMessage { get; set; }
     
     [Parameter]
-    public Employee? Employee { get; set; }
+    public Service service { get; set; }
 
     [Parameter]
     public bool IsOpen { get; set; }
@@ -59,7 +58,7 @@
     {
         loading = true;
         
-        var result = await EmployeeRequests.DeleteEmployeeAsync(Employee.Id);
+        var result = await ServiceRequests.DeleteServiceAsync(service.Id);
         if (result is null)
         {
             ErrorMessage = "Something went wrong";
@@ -69,6 +68,6 @@
             return;
         }
         
-        NavigationManager.NavigateTo("/employees");
+        NavigationManager.NavigateTo("/jobs");
     }
 }

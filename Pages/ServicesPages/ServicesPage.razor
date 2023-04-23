@@ -1,0 +1,67 @@
+﻿@page "/jobs"
+@inject IServiceRequests ServiceRequests
+@inject ISessionValues SessionValues
+@inject NavigationManager NavigationManager
+
+<PageTitle>GuacaFactory - Jobs</PageTitle>
+
+@if (administrator?.EmployeeUsername is not null)
+    {
+        <div class="row justify-content-between alert alert-info align-content-center">
+            <div class="col-8">
+                <p style="font-size: 1.2em">You are logged and using the administration mode</p>
+            </div>
+            <div class="col-2">
+                <button class="btn btn-primary" @onclick="OnCreateClick">Create</button>
+            </div>
+        </div>
+
+        @if (isCreateModalOpen)
+        {
+            <CreateModalService IsOpen="isCreateModalOpen"/>
+        }
+    }
+
+<h1>Jobs</h1>
+
+<p>
+    GuacaFactory's different jobs are listed below.
+</p>
+
+@if (services == null)
+{
+    <LoadingSpinner/>
+}
+else
+{
+    <div class="row justify-content-center">
+        @foreach (var service in services)
+        {
+            <div class="col-12" @onclick="() => OpenSelectedService(service.Id)">
+                <ServiceCard service="service"/>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private ICollection<Service>? services;
+    private bool isCreateModalOpen = false;
+    private Administrator? administrator;
+
+    protected override async Task OnInitializedAsync()
+    {
+        administrator = await SessionValues.GetSessionUser();
+        services = await ServiceRequests.GetServicesAsync(1, 10);
+    }
+
+    private void OnCreateClick()
+    {
+        isCreateModalOpen = true;
+    }
+    
+    private void OpenSelectedService(int? serviceId)
+    {
+        NavigationManager.NavigateTo($"/jobs/{serviceId}");
+    }
+}

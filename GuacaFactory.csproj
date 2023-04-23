@@ -20,4 +20,10 @@
     <ItemGroup>
         <Folder Include="wwwroot\image" />
     </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Shared\Components\DocumentForms\CreateModalDocument.razor" />
+      <_ContentIncludedByDefault Remove="Shared\Components\DocumentForms\DeleteModalDocument.razor" />
+      <_ContentIncludedByDefault Remove="Shared\Components\DocumentForms\EditModalDocument.razor" />
+    </ItemGroup>
 </Project>

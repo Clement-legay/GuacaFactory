@@ -43,6 +43,11 @@ else
         {
             <EditModalEmployee Employee="employee" IsOpen="isEditModalOpen"/>
         }
+        @if (isCreateDocumentModalOpen)
+        {
+            <CreateModalDocument EmployeeId="Id" IsOpen="isCreateDocumentModalOpen"/>
+        }
+        
     }
 
     <div class="row justify-content-evenly mb-5">
@@ -127,7 +132,17 @@ else
         </div>
     </div>
 
-    <h3 class="mb-2">Documents</h3>
+    <div class="row justify-content-between">
+        <div class="col-auto">
+            <h3 class="mb-2">Documents</h3>
+        </div>
+        @if (administrator?.EmployeeUsername is not null)
+        {
+            <div class="col-auto">
+                <button class="btn btn-primary" @onclick="OnCreateDocumentClick">Add document</button>
+            </div>
+        }
+    </div>
     @if (documents == null)
     {
         <LoadingSpinner/>
@@ -143,6 +158,11 @@ else
                     <th>Content Type</th>
                     <th>File</th>
                     <th>Created At</th>
+                    @if (administrator?.EmployeeUsername is not null)
+                    {
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    }
                 </tr>
                 </thead>
                 <tbody>
@@ -182,6 +202,19 @@ else
                             }
                         </td>
                         <td>@document.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        @if (administrator?.EmployeeUsername is not null)
+                        {
+                            <td>
+                                <button class="btn" @onclick="() => OnEditDocumentClick(document)">
+                                    <i class="fa-solid fa-pen"></i>                        
+                                </button>
+                            </td>
+                            <td>
+                                <button class="btn" @onclick="() => OnDeleteDocumentClick(document)">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        }
                     </tr>
                 }
                 </tbody>
@@ -199,6 +232,13 @@ else
     
     private bool isEditModalOpen = false;
     private bool isDeleteModalOpen = false;
+    
+    private bool isCreateDocumentModalOpen = false;
+    private bool isEditDocumentModalOpen = false;
+    private bool isDeleteDocumentModalOpen = false;
+    
+    private Document? documentToEdit;
+    private Document? documentToDelete;
 
     [Parameter]
     public int Id { get; set; }
@@ -228,5 +268,22 @@ else
     private void OnDeleteButtonClick()
     {
         isDeleteModalOpen = true;
+    }
+    
+    private void OnCreateDocumentClick()
+    {
+        isCreateDocumentModalOpen = true;
+    }
+    
+    private void OnEditDocumentClick(Document document)
+    {
+        documentToEdit = document;
+        isEditDocumentModalOpen = false;
+    }
+    
+    private void OnDeleteDocumentClick(Document document)
+    {
+        documentToDelete = document;
+        isDeleteDocumentModalOpen = false;
     }
 }
