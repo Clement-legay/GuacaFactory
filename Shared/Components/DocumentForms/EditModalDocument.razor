@@ -1,4 +1,6 @@
-@inject IServiceRequests ServiceRequests
+@using System.Net.Http.Headers
+@inject IDocumentRequests DocumentRequests
+@inject IDocumentTypeRequests DocumentTypeRequests
 @inject NavigationManager NavigationManager
 
 <div class="modal-backdrop fade show"></div>
@@ -7,7 +9,7 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Update a Job</h5>
+                <h5 class="modal-title" id="modalLabel">Edit a Document</h5>
                 <button type="button" @onclick="Close" style="border: none; background: none" data-dismiss="modal" aria-label="Close">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -31,9 +33,27 @@
                                 <input aria-label="LastName" value="@_description" @oninput="OnInputDescription" class="form-control" placeholder="Enter Description" name="Description"/>
                             </div>
                         </div>
-                        <div class="col-12">
+                        <div class="col-6">
                             <div class="form-group mb-2">
-                                <InputFile id="FileInput" _bl_2="" type="file" class="form-control" OnChange="@HandleFileUpload" accept="image/*" />
+                                <InputFile id="FileInput" _bl_2="" type="file" class="form-control" OnChange="@HandleFileUpload" />
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group mb-2">
+                                @if (_documentTypes is not null)
+                                {
+                                    <input type="text" value="@_documentType" @oninput="OnInputDocumentType" name="Document type" list="documentTypes" class="form-control" placeholder="Document type"/>
+                                    <datalist id="documentTypes">
+                                        @foreach (var documentType in _documentTypes)
+                                        {
+                                            <option value="@documentType.Name"></option>
+                                        }
+                                    </datalist>
+                                }
+                                else
+                                {
+                                    <input type="text" disabled name="Document type" class="form-control" placeholder="Document type"/>
+                                }
                             </div>
                         </div>
                     </div>
@@ -42,7 +62,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" @onclick="Close" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" @onclick="UpdateService" class="btn btn-primary">Save Changes</button>
+                <button type="button" @onclick="UpdateDocument" class="btn btn-primary">Save Changes</button>
             </div>
         </div>
     </div>
@@ -51,23 +71,31 @@
 @code
 {
     [Parameter]
-    public Service service { get; set; }
+    public bool IsOpen { get; set; }
     
     [Parameter]
-    public bool IsOpen { get; set; }
+    public int EmployeeId { get; set; }
+    
+    [Parameter]
+    public Document Document { get; set; }
+
+    private ICollection<DocumentType>? _documentTypes;
 
     private string? _errorMessage;
 
     private string? _name;
     private string? _description;
+    private string? _documentType;
     private IBrowserFile? _file;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _name = service.Name;
-        _description = service.Description;
-
-        StateHasChanged();
+        _documentTypes = await DocumentTypeRequests.GetDocumentTypesAsync(1, 100);
+        
+        
+        _name = Document.Name;
+        _description = Document.Description;
+        _documentType = _documentTypes?.FirstOrDefault(x => x.Id == Document.DocumentTypeId)?.Name;
     }
 
     private void Close()
@@ -86,28 +114,56 @@
         _description = e.Value?.ToString() ?? null;
         CheckRule(e);
     }
+    
+    private void OnInputDocumentType(ChangeEventArgs e)
+    {
+        _documentType = e.Value?.ToString() ?? null;
+        CheckRule(e);
+    }
 
     private void HandleFileUpload(InputFileChangeEventArgs e)
     {
         _file = e.File;
     }
 
-    private async Task UpdateService()
+    private async Task UpdateDocument()
     {
-        var multipartService = new MultipartFormDataContent();
+        var documentType = _documentTypes?.FirstOrDefault(x => x.Name == _documentType);
+        if (documentType is null)
+        {
+            if (_documentType is null)
+            {
+                _errorMessage = "Document type is required";
+                return;
+            }
+            
+            var multipartDocumentType = new MultipartFormDataContent();
+            multipartDocumentType.Add(new StringContent(_documentType), "Name");
+            
+            documentType = await DocumentTypeRequests.AddDocumentTypeAsync(multipartDocumentType);
+        }
 
-        if (_name != null) multipartService.Add(new StringContent(_name), "Name");
-        if (_description != null) multipartService.Add(new StringContent(_description), "Description");
-        if (_file != null) multipartService.Add(new StreamContent(_file.OpenReadStream()), "Picture", _file.Name);
+        var multipartDocument = new MultipartFormDataContent();
 
-        var response = await ServiceRequests.UpdateServiceAsync(service.Id, multipartService);
+        if (_name != null) multipartDocument.Add(new StringContent(_name), "Name");
+        if (_description != null) multipartDocument.Add(new StringContent(_description), "Description");
+        if (_file != null)
+        {
+            var streamContent = new StreamContent(_file.OpenReadStream());
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(_file.ContentType);
+            multipartDocument.Add(streamContent, "File", _file.Name);
+        }
+        multipartDocument.Add(new StringContent(EmployeeId.ToString()), "EmployeeId");
+        multipartDocument.Add(new StringContent(documentType!.Id.ToString()!), "DocumentTypeId");
+
+        var response = await DocumentRequests.UpdateDocumentAsync(Document.Id, multipartDocument);
         if (response is null)
         {
-            _errorMessage = "Site could not be created";
+            _errorMessage = "Document could not be updated";
             return;
         }
         
-        Close();
+        NavigationManager.NavigateTo(NavigationManager.Uri, true);
     }
 
     private void CheckRule(ChangeEventArgs e)

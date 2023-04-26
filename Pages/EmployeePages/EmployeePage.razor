@@ -34,7 +34,7 @@ else
                 </div>
             </div>
         </div>
-        
+
         @if (isDeleteModalOpen)
         {
             <DeleteModalEmployee Employee="employee" IsOpen="isDeleteModalOpen"/>
@@ -47,13 +47,20 @@ else
         {
             <CreateModalDocument EmployeeId="Id" IsOpen="isCreateDocumentModalOpen"/>
         }
-        
+        @if (isEditDocumentModalOpen)
+        {
+            <EditModalDocument Document="documentToEdit" EmployeeId="Id" IsOpen="isEditDocumentModalOpen"/>
+        }
+        @if (isDeleteDocumentModalOpen)
+        {
+            <DeleteModalDocument Document="documentToDelete" IsOpen="isEditDocumentModalOpen"/>
+        }
     }
 
     <div class="row justify-content-evenly mb-5">
         <div class="col-8">
             <h1>@employee.Firstname @employee.Lastname</h1>
-            
+
             <p style="font-size: 1.5rem">
                 <span style="font-weight: bold">Status: </span>
                 @if (service != null)
@@ -86,7 +93,7 @@ else
             }
         </div>
     </div>
-    
+
     <div class="row justify-content-evenly mb-3">
         <div class="col-6">
             <h2 class="mb-2">Personal information</h2>
@@ -206,7 +213,7 @@ else
                         {
                             <td>
                                 <button class="btn" @onclick="() => OnEditDocumentClick(document)">
-                                    <i class="fa-solid fa-pen"></i>                        
+                                    <i class="fa-solid fa-pen"></i>
                                 </button>
                             </td>
                             <td>
@@ -260,8 +267,6 @@ else
 
     private void OnEditButtonClick()
     {
-        
-        Console.WriteLine("Edit button clicked");
         isEditModalOpen = true;
     }
     
@@ -277,13 +282,15 @@ else
     
     private void OnEditDocumentClick(Document document)
     {
+        Console.WriteLine("Edit document");
         documentToEdit = document;
-        isEditDocumentModalOpen = false;
+        isEditDocumentModalOpen = true;
     }
     
     private void OnDeleteDocumentClick(Document document)
     {
+        Console.WriteLine("Delete document");
         documentToDelete = document;
-        isDeleteDocumentModalOpen = false;
+        isDeleteDocumentModalOpen = true;
     }
 }

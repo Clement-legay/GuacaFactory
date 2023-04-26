@@ -112,8 +112,6 @@ public class AdministratorRequests : IAdministratorRequests
     public async Task<Administrator?> PersistAdministratorAsync(MultipartFormDataContent dataContent)
     {
         await InitializeAsync();
-
-        Console.WriteLine(dataContent.ReadAsStringAsync().Result);
         
         var result = await _httpClient.PostAsync($"{_apiUrl}/token", dataContent);
         if (!result.IsSuccessStatusCode) return null;

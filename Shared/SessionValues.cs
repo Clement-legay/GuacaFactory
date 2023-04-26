@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Blazored.SessionStorage;
@@ -13,15 +14,33 @@ public class SessionValues : ISessionValues
 
     private readonly IJSRuntime _jsRuntime;
     private readonly ISessionStorageService _sessionStorageService;
+    
+    private readonly HttpClient _httpClient;
+    private readonly string _apiUrl;
+    
+    private const string Url = "http://localhost:8080";
+    private const string Version = "v1";
 
     #endregion
 
     #region Constructor
 
-    public SessionValues(IJSRuntime jsRuntime, ISessionStorageService sessionStorageService)
+    public SessionValues(IJSRuntime jsRuntime, ISessionStorageService sessionStorageService, HttpClient httpClient)
     {
         _jsRuntime = jsRuntime;
         _sessionStorageService = sessionStorageService;
+        _httpClient = httpClient;
+        
+        _apiUrl = $"{Url}/api/{Version}/administrators";
+    }
+    
+    private async Task InitializeAsync()
+    {
+        var apiKey = await _httpClient.GetStringAsync($"{Url}/api/{Version}/basics/apikey");
+
+        var token = Convert.ToBase64String(Encoding.UTF8.GetBytes(apiKey));
+
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
     #endregion
@@ -61,11 +80,30 @@ public class SessionValues : ISessionValues
     {
         var encodedUser = await _sessionStorageService.GetItemAsync<string>("user");
         if (encodedUser is null) return null;
+        
         var decodedUser = Encoding.UTF8.GetString(Convert.FromBase64String(encodedUser));
         var user = JsonSerializer.Deserialize<Administrator>(decodedUser);
+        if (user is null) return null;
+        
+        var authenticity = await CheckAdministratorAuthenticityAsync(user);
+        if (!authenticity) return null;
+
         return user;
     }
     
+    private async Task<bool> CheckAdministratorAuthenticityAsync(Administrator administrator)
+    {
+        await InitializeAsync();
+        
+        var serializedUser = JsonSerializer.Serialize(administrator);
+        var content = new StringContent(serializedUser, Encoding.UTF8, "application/json");
+        
+        var result = await _httpClient.PostAsync($"{_apiUrl}/check", content);
+        var booleanResult = await result.Content.ReadAsStringAsync();
+        
+        return bool.Parse(booleanResult);
+    }
+
     public async Task RemoveSessionUser()
     {
         await _sessionStorageService.RemoveItemAsync("user");

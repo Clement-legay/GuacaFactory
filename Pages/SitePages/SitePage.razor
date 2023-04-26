@@ -1,7 +1,6 @@
 @page "/sites/{id:int}"
 @inject IEmployeeRequests EmployeeRequests
 @inject IDocumentRequests DocumentRequests
-@inject IServiceRequests ServiceRequests
 @inject ISessionValues SessionValues
 @inject ISiteRequests SiteRequests
 @inject NavigationManager NavigationManager
@@ -198,8 +197,6 @@ else
 
     private void OnEditButtonClick()
     {
-        
-        Console.WriteLine("Edit button clicked");
         isEditModalOpen = true;
     }
     

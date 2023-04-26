@@ -1,13 +1,12 @@
 @inject NavigationManager NavigationManager
-@inject IServiceRequests ServiceRequests
-
+@inject IDocumentRequests DocumentRequests
 <div class="modal-backdrop fade show"></div>
 
 <div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Delete - @service.Name</h5>
+                <h5 class="modal-title" id="modalLabel">Delete - @Document.Name</h5>
                 <button type="button" @onclick="Close" style="border: none; background: none" data-dismiss="modal" aria-label="Close">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -19,7 +18,7 @@
                         @ErrorMessage
                     </div>
                 }
-                <p>Are you sure you want to delete @service.Name ?</p>
+                <p>Are you sure you want to delete @Document.Name ?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" @onclick="Close" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -44,7 +43,7 @@
     private string? ErrorMessage { get; set; }
     
     [Parameter]
-    public Service service { get; set; }
+    public Document Document { get; set; }
 
     [Parameter]
     public bool IsOpen { get; set; }
@@ -58,7 +57,7 @@
     {
         loading = true;
         
-        var result = await ServiceRequests.DeleteServiceAsync(service.Id);
+        var result = await DocumentRequests.DeleteDocumentAsync(Document.Id);
         if (result is null)
         {
             ErrorMessage = "Something went wrong";
@@ -68,6 +67,6 @@
             return;
         }
         
-        NavigationManager.NavigateTo("/jobs");
+        Close();
     }
 }
