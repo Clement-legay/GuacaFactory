@@ -4,10 +4,9 @@
 @inject ISiteRequests SiteRequests
 @inject ISessionValues SessionValues
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
-<div class="modal-backdrop fade show"></div>
-
-<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+<div @ref="_modalCreateSite" class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -70,7 +69,9 @@
 @code
 {
     [Parameter]
-    public bool IsOpen { get; set; }
+    public EventCallback<bool> OnClose { get; set; }
+    
+    private ElementReference _modalCreateSite;
 
     private string? _errorMessage;
 
@@ -82,9 +83,18 @@
     private string? _street;
     private string? _postalCode;
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            JsRuntime.InvokeVoidAsync("ShowModal", _modalCreateSite);
+        }
+    }
+
     private void Close()
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        JsRuntime.InvokeVoidAsync("HideModal", _modalCreateSite);
+        OnClose.InvokeAsync(true);
     }
     
     private void OnInputName(ChangeEventArgs e)
@@ -150,6 +160,7 @@
             return;
         }
         
+        Close();
         NavigationManager.NavigateTo($"/sites/{response.Id}");
     }
 

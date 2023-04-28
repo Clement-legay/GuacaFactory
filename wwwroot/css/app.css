@@ -8,6 +8,18 @@ h1:focus {
     outline: none;
 }
 
+@keyframes fading-out {
+    0% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 a, .btn-link {
     color: #0071c1;
 }

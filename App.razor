@@ -1,4 +1,11 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿
+@if (_loading)
+{
+    <div @ref="_loadingScreen" style="animation: fading-out 2s ease-in-out forwards; height: 100vh; width: 100vw; background: white; position: absolute; transform: translate(-50%, -50%); top: 50%; left: 50%; z-index: 9999;">
+        <lottie-player src="https://assets9.lottiefiles.com/private_files/lf30_xNnXdH.json" background="transparent" speed="1"  style="width: 500px; height: 500px; position:absolute; transform: translate(-50%, -50%); top: 50%; left: 50%;" loop autoplay></lottie-player>
+    </div>
+}
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
         <FocusOnNavigate RouteData="@routeData" Selector="h1"/>
@@ -10,3 +17,16 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private ElementReference _loadingScreen;
+
+    private bool _loading = true;
+    private int _delay = 1000 * 2; // 5 seconds
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(_delay);
+        _loading = false;
+    }
+}

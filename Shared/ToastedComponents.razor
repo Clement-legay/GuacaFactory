@@ -1,0 +1,35 @@
+@inject IJSRuntime JsRuntime
+
+<div aria-live="polite" aria-atomic="true" style="position: relative; min-height: 200px;">
+    <div style="position: absolute; top: 0; right: 0; padding-top: 20px; padding-right: 20px">
+
+        @foreach(var item in items)
+        {
+            <Toast Message="Hello World" Creation="DateTime.Now" Title="Super" Ref="componentRefs[item.Key]"></Toast>
+        }
+
+    </div>
+</div>
+
+@code {
+    private Dictionary<string, ElementReference> componentRefs = new Dictionary<string, ElementReference>();
+    private List<Item> items = new List<Item> { 
+        new Item { Key = "key1", Value = "value1" },
+        new Item { Key = "key2", Value = "value2" },
+        new Item { Key = "key3", Value = "value3" },
+    };
+
+    protected override void OnInitialized()
+    {
+        foreach (var item in items)
+        {
+            componentRefs[item.Key] = new ElementReference();
+        }
+    }
+    
+    public class Item
+    {
+        public string Key { get; set; }
+        public string Value { get; set; }
+    }   
+}

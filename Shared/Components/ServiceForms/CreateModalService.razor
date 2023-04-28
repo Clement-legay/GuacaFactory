@@ -1,10 +1,9 @@
 @inject IServiceRequests ServiceRequests
 @inject ISessionValues SessionValues
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
-<div class="modal-backdrop fade show"></div>
-
-<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+<div @ref="_modalCreateService" class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -52,7 +51,9 @@
 @code
 {
     [Parameter]
-    public bool IsOpen { get; set; }
+    public EventCallback<bool> OnClose { get; set; }
+
+    private ElementReference _modalCreateService;
 
     private string? _errorMessage;
 
@@ -60,9 +61,18 @@
     private string? _description;
     private IBrowserFile? _file;
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            JsRuntime.InvokeVoidAsync("ShowModal", _modalCreateService);
+        }
+    }
+
     private void Close()
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        JsRuntime.InvokeVoidAsync("HideModal", _modalCreateService);
+        OnClose.InvokeAsync(false);
     }
     
     private void OnInputName(ChangeEventArgs e)
@@ -97,6 +107,7 @@
             return;
         }
         
+        Close();
         NavigationManager.NavigateTo($"/jobs/{response.Id}");
     }
 

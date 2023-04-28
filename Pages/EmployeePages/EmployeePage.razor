@@ -37,23 +37,23 @@ else
 
         @if (isDeleteModalOpen)
         {
-            <DeleteModalEmployee Employee="employee" IsOpen="isDeleteModalOpen"/>
+            <DeleteModalEmployee Employee="employee" OnClose="OnDeleteModalClose"/>
         }
         @if (isEditModalOpen)
         {
-            <EditModalEmployee Employee="employee" IsOpen="isEditModalOpen"/>
+            <EditModalEmployee Employee="employee" OnClose="OnEditModalClose" OnEdit="OnEditModalSubmit"/>
         }
         @if (isCreateDocumentModalOpen)
         {
-            <CreateModalDocument EmployeeId="Id" IsOpen="isCreateDocumentModalOpen"/>
+            <CreateModalDocument EmployeeId="Id" OnClose="OnCreateDocumentModalClose" OnCreate="OnDocumentChange"/>
         }
         @if (isEditDocumentModalOpen)
         {
-            <EditModalDocument Document="documentToEdit" EmployeeId="Id" IsOpen="isEditDocumentModalOpen"/>
+            <EditModalDocument Document="documentToEdit" EmployeeId="Id" OnClose="OnEditDocumentModalClose" OnEdit="OnDocumentChange"/>
         }
         @if (isDeleteDocumentModalOpen)
         {
-            <DeleteModalDocument Document="documentToDelete" IsOpen="isEditDocumentModalOpen"/>
+            <DeleteModalDocument Document="documentToDelete" OnClose="OnDeleteDocumentModalClose" OnDelete="OnDocumentChange"/>
         }
     }
 
@@ -83,14 +83,7 @@ else
             </p>
         </div>
         <div class="col-4">
-            @if (employee.PictureUrl != null)
-            {
-                <img src="@DocumentRequests.GetDocumentViaUrl(employee.PictureUrl)" style="height: auto; width: 100%; overflow: hidden;" alt="Employee picture" class="img-thumbnail"/>
-            }
-            else
-            {
-                <img src="image/account-25.png" style="height: auto; width: 100%; aspect-ratio: 1/1" alt="Employee picture" class="img-thumbnail"/>
-            }
+            <img src="@_pictureUrl" style="height: auto; width: 100%; overflow: hidden;" alt="Employee picture" class="img-thumbnail"/>
         </div>
     </div>
 
@@ -237,6 +230,8 @@ else
     private Site? site;
     private Administrator? administrator;
     
+    private string _pictureUrl;
+    
     private bool isEditModalOpen = false;
     private bool isDeleteModalOpen = false;
     
@@ -258,6 +253,8 @@ else
 
         employee = await EmployeeRequests.GetEmployeeByIdAsync(Id);
         if (employee is null) NavigationManager.NavigateTo("/notfound");
+        
+        _pictureUrl = employee?.PictureUrl is null ? "image/account-25.png" : DocumentRequests.GetDocumentViaUrl(employee.PictureUrl);
         
         service = employee!.ServiceId != null ? await ServiceRequests.GetServiceByIdAsync(employee.ServiceId ?? 0) : null;
         site = employee.SiteId != null ? await SiteRequests.GetSiteByIdAsync(employee.SiteId ?? 0) : null;
@@ -292,5 +289,49 @@ else
         Console.WriteLine("Delete document");
         documentToDelete = document;
         isDeleteDocumentModalOpen = true;
+    }
+    
+    private void OnDeleteModalClose()
+    {
+        isDeleteModalOpen = false;
+    }
+    
+    private void OnEditModalClose()
+    {
+        isEditModalOpen = false;
+    }
+    
+    private async Task OnEditModalSubmit()
+    {
+        employee = await EmployeeRequests.GetEmployeeByIdAsync(Id);
+        service = employee!.ServiceId != null ? await ServiceRequests.GetServiceByIdAsync(employee.ServiceId ?? 0) : null;
+        site = employee.SiteId != null ? await SiteRequests.GetSiteByIdAsync(employee.SiteId ?? 0) : null;
+        
+        StateHasChanged();
+    }
+
+    private void OnCreateDocumentModalClose()
+    {
+        isCreateDocumentModalOpen = false;
+    }
+    
+    private void OnEditDocumentModalClose()
+    {
+        isEditDocumentModalOpen = false;
+    }
+    
+    private void OnDeleteDocumentModalClose()
+    {
+        isDeleteDocumentModalOpen = false;
+    }
+
+    private async Task OnDocumentChange()
+    {
+        employee = await EmployeeRequests.GetEmployeeByIdAsync(Id);
+        documents = await DocumentRequests.GetDocumentsByEmployeeIdAsync(Id);
+        
+        _pictureUrl = employee?.PictureUrl is null ? "image/account-25.png" : DocumentRequests.GetDocumentViaUrl(employee.PictureUrl);
+
+        StateHasChanged();
     }
 }

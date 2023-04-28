@@ -18,7 +18,7 @@
 
         @if (isCreateModalOpen)
         {
-            <CreateModalService IsOpen="isCreateModalOpen"/>
+            <CreateModalService OnClose="OnCreateModalClose"/>
         }
     }
 
@@ -63,5 +63,10 @@ else
     private void OpenSelectedService(int? serviceId)
     {
         NavigationManager.NavigateTo($"/jobs/{serviceId}");
+    }
+    
+    private void OnCreateModalClose()
+    {
+        isCreateModalOpen = false;
     }
 }

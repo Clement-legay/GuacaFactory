@@ -1,9 +1,8 @@
 @inject NavigationManager NavigationManager
 @inject ISiteRequests SiteRequests
+@inject IJSRuntime JsRuntime
 
-<div class="modal-backdrop fade show"></div>
-
-<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+<div @ref="_modalDeleteSite" class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -47,11 +46,22 @@
     public Site Site { get; set; }
 
     [Parameter]
-    public bool IsOpen { get; set; }
+    public EventCallback<bool> OnClose { get; set; }
     
+    private ElementReference _modalDeleteSite;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            JsRuntime.InvokeVoidAsync("ShowModal", _modalDeleteSite);
+        }
+    }
+
     private void Close()
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        JsRuntime.InvokeVoidAsync("HideModal", _modalDeleteSite);
+        OnClose.InvokeAsync(true);
     }
     
     private async Task OnDeleteButtonClick()
@@ -68,6 +78,7 @@
             return;
         }
         
+        Close();
         NavigationManager.NavigateTo("/sites");
     }
 }

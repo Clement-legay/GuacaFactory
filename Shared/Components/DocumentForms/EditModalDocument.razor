@@ -2,10 +2,9 @@
 @inject IDocumentRequests DocumentRequests
 @inject IDocumentTypeRequests DocumentTypeRequests
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
-<div class="modal-backdrop fade show"></div>
-
-<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+<div @ref="_modalEditDocument" class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -71,13 +70,18 @@
 @code
 {
     [Parameter]
-    public bool IsOpen { get; set; }
-    
+    public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnEdit { get; set; }
+
     [Parameter]
     public int EmployeeId { get; set; }
     
     [Parameter]
     public Document Document { get; set; }
+    
+    private ElementReference _modalEditDocument;
 
     private ICollection<DocumentType>? _documentTypes;
 
@@ -98,9 +102,18 @@
         _documentType = _documentTypes?.FirstOrDefault(x => x.Id == Document.DocumentTypeId)?.Name;
     }
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            JsRuntime.InvokeVoidAsync("ShowModal", _modalEditDocument);
+        }
+    }
+
     private void Close()
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        JsRuntime.InvokeVoidAsync("HideModal", _modalEditDocument);
+        OnClose.InvokeAsync(true);
     }
     
     private void OnInputName(ChangeEventArgs e)
@@ -163,7 +176,8 @@
             return;
         }
         
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        await OnEdit.InvokeAsync(true);
+        Close();
     }
 
     private void CheckRule(ChangeEventArgs e)

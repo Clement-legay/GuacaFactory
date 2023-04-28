@@ -70,11 +70,14 @@ public class EmployeeRequests : IEmployeeRequests
         return employee;
     }
 
-    public async Task<ICollection<Employee>?> GetEmployeesBySiteIdAsync(int siteId, string search, int page, int rows)
+    public async Task<ICollection<Employee>?> GetEmployeesBySiteIdAsync(int siteId, int? serviceId, string search, int page, int rows)
     {
         await InitializeAsync();
 
-        var result = await _httpClient.GetAsync($"{_apiUrl}/site/{siteId}?search={search}&page={page}&rows={rows}");
+        var queriesService = serviceId == null ? "" : $"&serviceId={serviceId}";
+        
+        var result = await _httpClient.GetAsync($"{_apiUrl}/site/{siteId}?search={search}&page={page}&rows={rows}{queriesService}");
+            
         if (!result.IsSuccessStatusCode) return null;
 
         var content = await result.Content.ReadAsStringAsync();
@@ -83,11 +86,13 @@ public class EmployeeRequests : IEmployeeRequests
         return employees;
     }
 
-    public async Task<ICollection<Employee>?> GetEmployeesByServiceIdAsync(int serviceId, string search, int page, int rows)
+    public async Task<ICollection<Employee>?> GetEmployeesByServiceIdAsync(int serviceId, int? siteId, string search, int page, int rows)
     {
         await InitializeAsync();
 
-        var result = await _httpClient.GetAsync($"{_apiUrl}/service/{serviceId}?search={search}&page={page}&rows={rows}");
+        var queriesSite = siteId == null ? "" : $"&siteId={siteId}";
+        
+        var result = await _httpClient.GetAsync($"{_apiUrl}/service/{serviceId}?search={search}&page={page}&rows={rows}{queriesSite}");
         if (!result.IsSuccessStatusCode) return null;
 
         var content = await result.Content.ReadAsStringAsync();
@@ -96,11 +101,14 @@ public class EmployeeRequests : IEmployeeRequests
         return employees;
     }
 
-    public async Task<ICollection<Employee>?> GetEmployeesByNameAsync(string name, int page, int rows)
+    public async Task<ICollection<Employee>?> GetEmployeesByNameAsync(string name, int? serviceId, int? siteId, int page, int rows)
     {
         await InitializeAsync();
 
-        var result = await _httpClient.GetAsync($"{_apiUrl}/search?name={name}&page={page}&rows={rows}");
+        var queriesService = serviceId == null ? "" : $"&serviceId={serviceId}";
+        var queriesSite = siteId == null ? "" : $"&siteId={siteId}";
+
+        var result = await _httpClient.GetAsync($"{_apiUrl}/search?name={name}&page={page}&rows={rows}{queriesService}{queriesSite}");
         if (!result.IsSuccessStatusCode) return null;
 
         var content = await result.Content.ReadAsStringAsync();

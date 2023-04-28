@@ -7,10 +7,9 @@
 @inject IServiceRequests ServiceRequests
 @inject ISiteRequests SiteRequests
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
-<div class="modal-backdrop fade show"></div>
-
-<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+<div @ref="_modalEditEmployee" class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -134,7 +133,12 @@
     public Employee Employee { get; set; }
 
     [Parameter]
-    public bool IsOpen { get; set; }
+    public EventCallback<bool> OnClose { get; set; }
+    
+    [Parameter]
+    public EventCallback<bool> OnEdit { get; set; }
+    
+    private ElementReference _modalEditEmployee;
  
     private ICollection<Service>? _services;
     private ICollection<Site>? _sites;
@@ -177,9 +181,18 @@
         StateHasChanged();
     }
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            JsRuntime.InvokeVoidAsync("ShowModal", _modalEditEmployee);
+        }
+    }
+
     private void Close()
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        JsRuntime.InvokeVoidAsync("HideModal", _modalEditEmployee);
+        OnClose.InvokeAsync(true);
     }
     
     private void OnInputFirstName(ChangeEventArgs e)
@@ -287,6 +300,8 @@
             _errorMessage = "Employee could not be updated";
             return;
         }
+        
+        await OnEdit.InvokeAsync(true);
         Close();
     }
 

@@ -1,6 +1,8 @@
 ﻿@page "/employees"
 @inject IEmployeeRequests EmployeeRequests
 @inject IDocumentRequests DocumentRequests
+@inject ISiteRequests SiteRequests
+@inject IServiceRequests ServiceRequests
 @inject NavigationManager NavigationManager
 @inject ISessionValues SessionValues
 
@@ -16,7 +18,7 @@
         
         @if (isCreateModalOpen)
         {
-            <CreateModalEmployee IsOpen="isCreateModalOpen"/>
+            <CreateModalEmployee OnClose="OnCreateModalClose"/>
         }
     }
 
@@ -36,11 +38,43 @@ else
         <div class="col-12">
         @if (administrator?.EmployeeUsername is not null)
         {
-            <div class="row justify-content-between">
+            <div class="row justify-content-between align-content-center">
                 <div class="col-2">
                     <button class="btn btn-primary" @onclick="OnCreateButtonClick">Create</button>
                 </div>
-                <div class="col-5">
+                <div class="col-3">
+                    @if (_sites is not null)
+                    {
+                        <select class="form-select" @onchange="OnSiteFilterChanged">
+                            <option value="0">All services</option>
+                            @foreach (var siteOption in _sites)
+                            {
+                                <option value="@siteOption.Id">@siteOption.Name</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <input disable aria-label="Select service" placeholder="Select service"/>
+                    }
+                </div>
+                <div class="col-3">
+                    @if (_services is not null)
+                    {
+                        <select class="form-select" @onchange="OnServiceFilterChanged">
+                            <option value="0">All services</option>
+                            @foreach (var serviceOption in _services)
+                            {
+                                <option value="@serviceOption.Id">@serviceOption.Name</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <input disable aria-label="Select service" placeholder="Select service"/>
+                    }
+                </div>
+                <div class="col-4">
                     <input type="text" @oninput="OnSearchValueChanged" class="form-control" placeholder="Search by name"/>
                 </div>
             </div>
@@ -48,7 +82,40 @@ else
         else
         {
             <div class="row justify-content-end">
-                <div class="col-5">
+                <div class="col-2"></div>
+                <div class="col-3">
+                    @if (_sites is not null)
+                    {
+                        <select class="form-select" @onchange="OnSiteFilterChanged">
+                            <option value="0">All services</option>
+                            @foreach (var siteOption in _sites)
+                            {
+                                <option value="@siteOption.Id">@siteOption.Name</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <input disable aria-label="Select service" placeholder="Select service"/>
+                    }
+                </div>
+                <div class="col-3">
+                    @if (_services is not null)
+                    {
+                        <select class="form-select" @onchange="OnServiceFilterChanged">
+                            <option value="0">All services</option>
+                            @foreach (var serviceOption in _services)
+                            {
+                                <option value="@serviceOption.Id">@serviceOption.Name</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <input disable aria-label="Select service" placeholder="Select service"/>
+                    }
+                </div>
+                <div class="col-4">
                     <input type="text" @oninput="OnSearchValueChanged" class="form-control" placeholder="Search by name"/>
                 </div>
             </div>
@@ -126,6 +193,13 @@ else
 @code {
     private bool isCreateModalOpen = false;
     private ICollection<Employee>? employees;
+    
+    private ICollection<Site>? _sites;
+    private ICollection<Service>? _services;
+
+    private int? _siteSelected = null;
+    private int? _serviceSelected = null;
+
     private int currentPage = 1;
     private int resultsPerPage = 10;
     private string searchValue = "";
@@ -134,19 +208,27 @@ else
     protected override async Task OnInitializedAsync()
     {
         administrator = await SessionValues.GetSessionUser();
-        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, _serviceSelected, _siteSelected, currentPage, resultsPerPage);
+
+        _sites = await  SiteRequests.GetSitesAsync(1, 100);
+        _services = await ServiceRequests.GetServicesAsync(1, 100);
+    }
+    
+    private void OnCreateModalClose()
+    {
+        isCreateModalOpen = false;
     }
 
     private async Task OnPageChanged(ChangeEventArgs e)
     {
         currentPage = e.Value!.ToString() == "" ? 1 : int.Parse(e.Value.ToString() ?? string.Empty);
-        employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, _serviceSelected, _siteSelected, currentPage, resultsPerPage);
     }
 
     private async Task OnResultsPerPageChanged(ChangeEventArgs e)
     {
         resultsPerPage = e.Value!.ToString() == "" ? 10 : int.Parse(e.Value.ToString() ?? string.Empty);
-        employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, _serviceSelected, _siteSelected, currentPage, resultsPerPage);
     }
 
     private async Task OnPreviousClicked()
@@ -154,7 +236,7 @@ else
         if (currentPage > 1)
         {
             currentPage--;
-            employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
+            employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, _serviceSelected, _siteSelected, currentPage, resultsPerPage);
         }
     }
     
@@ -166,13 +248,25 @@ else
     private async Task OnNextClicked()
     {
         currentPage++;
-        employees = await EmployeeRequests.GetEmployeesByNameAsync("", currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, _serviceSelected, _siteSelected, currentPage, resultsPerPage);
+    }
+    
+    private async Task OnSiteFilterChanged(ChangeEventArgs e)
+    {
+        _siteSelected = e.Value!.ToString() == "0" ? null : int.Parse(e.Value.ToString() ?? string.Empty);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, _serviceSelected, _siteSelected, currentPage, resultsPerPage);
+    }
+    
+    private async Task OnServiceFilterChanged(ChangeEventArgs e)
+    {
+        _serviceSelected = e.Value!.ToString() == "0" ? null : int.Parse(e.Value.ToString() ?? string.Empty);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, _serviceSelected, _siteSelected, currentPage, resultsPerPage);
     }
     
     private async Task OnSearchValueChanged(ChangeEventArgs e)
     {
         searchValue = e.Value!.ToString() ?? "";
-        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, currentPage, resultsPerPage);
+        employees = await EmployeeRequests.GetEmployeesByNameAsync(searchValue, _serviceSelected, _siteSelected, currentPage, resultsPerPage);
     }
     
     private void OnCreateButtonClick()

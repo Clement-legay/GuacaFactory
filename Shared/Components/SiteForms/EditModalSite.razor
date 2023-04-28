@@ -1,10 +1,9 @@
 @inject ISiteRequests SiteRequests
 @inject IAddressRequests AddressRequests
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
-<div class="modal-backdrop fade show"></div>
-
-<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+<div @ref="_modalEditSite" class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -70,7 +69,12 @@
     public Site Site { get; set; }
     
     [Parameter]
-    public bool IsOpen { get; set; }
+    public EventCallback<bool> OnClose { get; set; }
+    
+    [Parameter]
+    public EventCallback<bool> OnEdit { get; set; }
+    
+    private ElementReference _modalEditSite;
 
     private string? _errorMessage;
 
@@ -94,9 +98,18 @@
         StateHasChanged();
     }
 
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            JsRuntime.InvokeVoidAsync("ShowModal", _modalEditSite);
+        }
+    }
+
     private void Close()
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        JsRuntime.InvokeVoidAsync("HideModal", _modalEditSite);
+        OnClose.InvokeAsync(true);
     }
     
     private void OnInputName(ChangeEventArgs e)
@@ -175,6 +188,7 @@
             return;
         }
         
+        await OnEdit.InvokeAsync(true);
         Close();
     }
 

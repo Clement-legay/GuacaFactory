@@ -1,8 +1,8 @@
 @inject NavigationManager NavigationManager
 @inject IDocumentRequests DocumentRequests
-<div class="modal-backdrop fade show"></div>
+@inject IJSRuntime JsRuntime
 
-<div class="modal fade show" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
+<div @ref="_modalDeleteDocument" class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -46,11 +46,25 @@
     public Document Document { get; set; }
 
     [Parameter]
-    public bool IsOpen { get; set; }
+    public EventCallback<bool> OnClose { get; set; }
     
+    [Parameter]
+    public EventCallback<bool> OnDelete { get; set; }
+    
+    private ElementReference _modalDeleteDocument;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            JsRuntime.InvokeVoidAsync("ShowModal", _modalDeleteDocument);
+        }
+    }
+
     private void Close()
     {
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        JsRuntime.InvokeVoidAsync("HideModal", _modalDeleteDocument);
+        OnClose.InvokeAsync(true);
     }
     
     private async Task OnDeleteButtonClick()
@@ -67,6 +81,7 @@
             return;
         }
         
+        await OnDelete.InvokeAsync(true);
         Close();
     }
 }
